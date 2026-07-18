@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
 
@@ -26,6 +26,13 @@ class Config(BaseSettings):
     JWT_SECRET_KEY: str = "your_secret_key"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+    # Model configuration behavior
+    model_config = SettingsConfigDict(
+        env_file=".env",  # Automatically read this file
+        env_file_encoding="utf-8",
+        extra="ignore",  # Ignore extra env variables not listed here
+    )
 
 
 config = Config()
