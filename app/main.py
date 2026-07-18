@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
-from app.db.connection import get_db
+import app.db.models
+from app.db.connection import Base, engine, get_db
 from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -17,6 +18,12 @@ async def lifespan(app: FastAPI):
     # Shutdown logic: run once when application stops
     print("Application stopped")
 
+
+with engine.connect() as conn:
+    conn.execute(text("CREATE EXTENSION IF NOT EXISTS btree_gist"))
+    conn.commit()
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(lifespan=lifespan)
 
