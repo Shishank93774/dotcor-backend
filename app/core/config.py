@@ -22,11 +22,6 @@ class Config(BaseSettings):
         """Construct the database URL from individual components."""
         return f"postgresql+psycopg2://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}@{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
 
-    # JWT settings
-    JWT_SECRET_KEY: str = "your_secret_key"
-    JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-
     # Model configuration behavior
     model_config = SettingsConfigDict(
         env_file=".env",  # Automatically read this file
