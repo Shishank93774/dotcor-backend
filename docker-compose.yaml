@@ -1,0 +1,20 @@
+services:
+  backend:
+    container_name: backend_api
+    build: .
+    ports:
+      - "8000:80"
+    env_file:
+      - .env
+  db:
+    image: postgres:18.4@sha256:32ca0af8e77bfb8c6610c488e4691f83f972a3e9e64d3b02facf3ab111ad5500
+    container_name: postgres_db
+    env_file:
+      - app/db/.env
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/MAJOR/docker
+
+volumes:
+  pgdata:

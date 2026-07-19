@@ -11,3 +11,6 @@ wheels/
 
 # Tests
 tests/
+
+# Enviornment variables
+.env
