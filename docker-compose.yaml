@@ -1,5 +1,6 @@
 services:
   backend:
+    container_name: backend_api
     build: .
     ports:
       - "8000:80"
@@ -11,7 +12,7 @@ services:
     env_file:
       - app/db/.env
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/MAJOR/docker
 
