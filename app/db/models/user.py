@@ -10,13 +10,11 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     role: Mapped[str]
-    username: Mapped[str] = mapped_column(unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    username: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     contact_number: Mapped[str] = mapped_column(unique=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC)
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

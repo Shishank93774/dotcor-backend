@@ -7,11 +7,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 class Patient(User):
     __tablename__ = "patients"
 
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, index=True)
 
-    bookings: Mapped[list["Booking"]] = relationship(
-        back_populates="patient", cascade="all, delete-orphan"
-    )
+    bookings: Mapped[list["Booking"]] = relationship(back_populates="patient", cascade="all, delete-orphan")
 
     __mapper_args__ = {"polymorphic_identity": "patient"}
 

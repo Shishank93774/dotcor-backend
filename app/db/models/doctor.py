@@ -7,12 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 class Doctor(User):
     __tablename__ = "doctors"
 
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, index=True)
     specialization: Mapped[str] = mapped_column(nullable=False)
 
-    slots: Mapped[list["Slot"]] = relationship(
-        back_populates="doctor", cascade="all, delete-orphan"
-    )
+    slots: Mapped[list["Slot"]] = relationship(back_populates="doctor", cascade="all, delete-orphan")
 
     __mapper_args__ = {"polymorphic_identity": "doctor"}
 
