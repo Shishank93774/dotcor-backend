@@ -9,6 +9,7 @@ dependencies = [
     "fastapi>=0.139.2",
     "phonenumbers>=9.0.34",
     "psycopg2-binary>=2.9.12",
+    "pwdlib[argon2]>=0.3.0",
     "pydantic-extra-types>=2.11.1",
     "pydantic-settings>=2.14.2",
     "pydantic[email]>=2.13.4",
