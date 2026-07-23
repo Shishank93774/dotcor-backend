@@ -19,7 +19,10 @@ def create_doctor(doctor: DoctorCreate, doctor_service: DoctorService = Depends(
 
 @router.get("/{doctor_id}", response_model=DoctorReadPrivate)
 def get_doctor(doctor_id: int, doctor_service: DoctorService = Depends(get_doctor_service)):
-    return doctor_service.get_doctor(doctor_id)
+    doctor = doctor_service.get_doctor(doctor_id)
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+    return doctor
 
 
 @router.get("/", response_model=list[DoctorReadPublic])

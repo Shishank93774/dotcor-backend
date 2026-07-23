@@ -30,7 +30,10 @@ def create_booking(
 
 @router.get("/{booking_id}", response_model=BookingRead)
 def get_booking(booking_id: int, booking_service: BookingService = Depends(get_booking_service)):
-    return booking_service.get_booking(booking_id)
+    booking = booking_service.get_booking(booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return booking
 
 
 @router.get("/", response_model=list[BookingRead])
@@ -40,4 +43,7 @@ def get_bookings(booking_service: BookingService = Depends(get_booking_service))
 
 @router.patch("/cancel", response_model=BookingRead | None)
 def cancel_booking(booking_id: int, booking_service: BookingService = Depends(get_booking_service)):
-    return booking_service.cancel_booking(booking_id)
+    booking = booking_service.cancel_booking(booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return booking
