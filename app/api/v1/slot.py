@@ -18,21 +18,24 @@ def get_slot_service(db: Session = Depends(get_db)) -> SlotService:
 
 @router.post("/", response_model=SlotRead)
 def create_slot(
-    slot: SlotCreate,
+    req_slot: SlotCreate,
     doctor_service: DoctorService = Depends(get_doctor_service),
     slot_service: SlotService = Depends(get_slot_service),
 ):
-    doctor = doctor_service.get_doctor(slot.doctor_id)
+    doctor = doctor_service.get_doctor(req_slot.doctor_id)
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
-    slot = slot_service.create_slot(**slot.model_dump())
+    slot = slot_service.create_slot(**req_slot.model_dump())
 
     return slot
 
 
 @router.get("/{slot_id}", response_model=SlotRead)
 def get_slot(slot_id: int, slot_service: SlotService = Depends(get_slot_service)):
-    return slot_service.get_slot(slot_id)
+    slot = slot_service.get_slot(slot_id)
+    if not slot:
+        raise HTTPException(status_code=404, detail="Slot not found")
+    return slot
 
 
 @router.get("/", response_model=list[SlotRead])
@@ -42,4 +45,7 @@ def get_slots(slot_service: SlotService = Depends(get_slot_service)):
 
 @router.delete("/", response_model=SlotRead)
 def delete_slot(slot_id: int, slot_service: SlotService = Depends(get_slot_service)):
-    return slot_service.delete_slot(slot_id)
+    slot = slot_service.delete_slot(slot_id)
+    if not slot:
+        raise HTTPException(status_code=404, detail="Slot not found")
+    return slot

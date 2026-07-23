@@ -1,6 +1,8 @@
 from app.core.utils import get_password_hash
 from app.db.models.patient import Patient
+from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 
@@ -15,11 +17,21 @@ class PatientService:
         return self._db.scalars(select(Patient).where(Patient.id == patient_id)).first()
 
     def create_patient(self, username: str, email: str, password: str, contact_number: str, role: str = "patient") -> Patient:
-        patient = Patient(
-            username=username, email=email, hashed_password=get_password_hash(password.get_secret_value()), contact_number=contact_number, role=role
-        )
-        self._db.add(patient)
-        self._db.commit()
-        self._db.refresh(patient)
-
-        return patient
+        try:
+            patient = Patient(
+                username=username,
+                email=email,
+                hashed_password=get_password_hash(password.get_secret_value()),
+                contact_number=contact_number,
+                role=role,
+            )
+            self._db.add(patient)
+            self._db.commit()
+            self._db.refresh(patient)
+            return patient
+        except IntegrityError:
+            self._db.rollback()
+            raise HTTPException(status_code=409, detail="Username, email, or contact number already exists")
+        except SQLAlchemyError:
+            self._db.rollback()
+            raise HTTPException(status_code=500, detail="An unexpected database error occurred while creating the patient")
