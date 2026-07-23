@@ -1,9 +1,10 @@
 from app.core.utils import get_password_hash
 from app.db.models.doctor import Doctor
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+
 
 class DoctorService:
     def __init__(self, db: Session):
@@ -31,7 +32,7 @@ class DoctorService:
             return doctor
         except IntegrityError:
             self._db.rollback()
-            raise HTTPException(status_code=422, detail="Username, email, or contact number already exists")
+            raise HTTPException(status_code=409, detail="Username, email, or contact number already exists")
         except SQLAlchemyError:
             self._db.rollback()
             raise HTTPException(status_code=500, detail="An unexpected database error occurred while creating the doctor")

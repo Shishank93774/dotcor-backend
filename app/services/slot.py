@@ -1,10 +1,10 @@
 from datetime import datetime
 
 from app.db.models.slot import Slot
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
 
 
 class SlotService:

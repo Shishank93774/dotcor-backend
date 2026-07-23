@@ -28,7 +28,7 @@ class BookingService:
             return booking
         except IntegrityError:
             self._db.rollback()
-            raise HTTPException(status_code=409, detail="Invalid patient/slot ID")
+            raise HTTPException(status_code=422, detail="Invalid patient/slot ID")
 
     def cancel_booking(self, booking_id: int) -> Booking | None:
         booking = self.get_booking(booking_id)
