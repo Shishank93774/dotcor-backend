@@ -11,8 +11,11 @@ class SlotService:
     def __init__(self, db: Session):
         self._db = db
 
-    def list_slots(self) -> list[Slot]:
-        return self._db.scalars(select(Slot)).all()
+    def list_slots(self, doctor_id: int | None) -> list[Slot]:
+        query = select(Slot)
+        if doctor_id is not None:
+            query = query.where(Slot.doctor_id == doctor_id)
+        return self._db.scalars(query).all()
 
     def get_slot(self, slot_id: int) -> Slot | None:
         return self._db.scalars(select(Slot).where(Slot.id == slot_id)).first()

@@ -5,7 +5,7 @@ from app.services.slot import SlotService
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/slots")
+router = APIRouter(prefix="/slots", tags=["slots"])
 
 
 def get_doctor_service(db: Session = Depends(get_db)) -> DoctorService:
@@ -39,11 +39,11 @@ def get_slot(slot_id: int, slot_service: SlotService = Depends(get_slot_service)
 
 
 @router.get("/", response_model=list[SlotRead])
-def get_slots(slot_service: SlotService = Depends(get_slot_service)):
-    return slot_service.list_slots()
+def get_slots(doctor_id: int = None, slot_service: SlotService = Depends(get_slot_service)):
+    return slot_service.list_slots(doctor_id=doctor_id)
 
 
-@router.delete("/", response_model=SlotRead)
+@router.delete("/{slot_id}", response_model=SlotRead)
 def delete_slot(slot_id: int, slot_service: SlotService = Depends(get_slot_service)):
     slot = slot_service.delete_slot(slot_id)
     if not slot:

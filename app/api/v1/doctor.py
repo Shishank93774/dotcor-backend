@@ -5,7 +5,7 @@ from app.services.doctor import DoctorService
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/users/doctors")
+router = APIRouter(prefix="/users/doctors", tags=["doctors"])
 
 
 def get_doctor_service(db: Session = Depends(get_db)) -> DoctorService:
