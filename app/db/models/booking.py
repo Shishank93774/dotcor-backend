@@ -22,7 +22,7 @@ class Booking(Base):
     __tablename__ = "bookings"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    slot_id: Mapped[int] = mapped_column(ForeignKey("slots.id"), unique=True, nullable=False)
+    slot_id: Mapped[int] = mapped_column(ForeignKey("slots.id"), nullable=False)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), nullable=False)
     status: Mapped[Status] = mapped_column(SAEnum(Status, values_callable=lambda enum: [e.value for e in enum]))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
