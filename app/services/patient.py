@@ -1,6 +1,6 @@
+from app.core.exceptions import ResourceConflictError, ResourceNotFoundError, ServiceError
 from app.core.utils import get_password_hash
 from app.db.models.patient import Patient
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -13,8 +13,11 @@ class PatientService:
     def list_patients(self) -> list[Patient]:
         return self._db.scalars(select(Patient)).all()
 
-    def get_patient(self, patient_id: int) -> Patient | None:
-        return self._db.scalars(select(Patient).where(Patient.id == patient_id)).first()
+    def get_patient(self, patient_id: int) -> Patient:
+        patient = self._db.scalars(select(Patient).where(Patient.id == patient_id)).first()
+        if not patient:
+            raise ResourceNotFoundError("Patient not found")
+        return patient
 
     def create_patient(self, username: str, email: str, password: str, contact_number: str, role: str = "patient") -> Patient:
         try:
@@ -31,7 +34,7 @@ class PatientService:
             return patient
         except IntegrityError:
             self._db.rollback()
-            raise HTTPException(status_code=409, detail="Username, email, or contact number already exists")
+            raise ResourceConflictError("Username, email, or contact number already exists")
         except SQLAlchemyError:
             self._db.rollback()
-            raise HTTPException(status_code=500, detail="An unexpected database error occurred while creating the patient")
+            raise ServiceError("An unexpected database error occurred while creating the patient")
