@@ -2,7 +2,7 @@ from app.db.connection import get_db
 from app.schemas.slot import SlotCreate, SlotRead
 from app.services.doctor import DoctorService
 from app.services.slot import SlotService
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/slots", tags=["slots"])
@@ -16,7 +16,7 @@ def get_slot_service(db: Session = Depends(get_db)) -> SlotService:
     return SlotService(db=db)
 
 
-@router.post("/", response_model=SlotRead)
+@router.post("/", response_model=SlotRead, status_code=status.HTTP_201_CREATED)
 def create_slot(
     req_slot: SlotCreate,
     doctor_service: DoctorService = Depends(get_doctor_service),
@@ -30,22 +30,16 @@ def create_slot(
     return slot
 
 
-@router.get("/{slot_id}", response_model=SlotRead)
+@router.get("/{slot_id}", response_model=SlotRead, status_code=status.HTTP_200_OK)
 def get_slot(slot_id: int, slot_service: SlotService = Depends(get_slot_service)):
-    slot = slot_service.get_slot(slot_id)
-    if not slot:
-        raise HTTPException(status_code=404, detail="Slot not found")
-    return slot
+    return slot_service.get_slot(slot_id)
 
 
-@router.get("/", response_model=list[SlotRead])
+@router.get("/", response_model=list[SlotRead], status_code=status.HTTP_200_OK)
 def get_slots(doctor_id: int = None, slot_service: SlotService = Depends(get_slot_service)):
     return slot_service.list_slots(doctor_id=doctor_id)
 
 
-@router.delete("/{slot_id}", response_model=SlotRead)
+@router.delete("/{slot_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
 def delete_slot(slot_id: int, slot_service: SlotService = Depends(get_slot_service)):
-    slot = slot_service.delete_slot(slot_id)
-    if not slot:
-        raise HTTPException(status_code=404, detail="Slot not found")
-    return slot
+    return slot_service.delete_slot(slot_id)

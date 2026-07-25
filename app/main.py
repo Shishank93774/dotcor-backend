@@ -10,6 +10,8 @@ from app.core.logging import get_logger
 from app.db.connection import Base, engine, get_db
 from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
+from app.core.exceptions import setup_exception_handlers
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -34,6 +36,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+setup_exception_handlers(app)
+
 
 
 @app.get("/")
