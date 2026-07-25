@@ -1,7 +1,6 @@
-from dotenv import load_dotenv
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
 
-load_dotenv()
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Config(BaseSettings):
@@ -24,9 +23,9 @@ class Config(BaseSettings):
 
     # Model configuration behavior
     model_config = SettingsConfigDict(
-        env_file=".env",  # Automatically read this file
+        env_file=os.getenv("ENV_FILE", ".env"),
         env_file_encoding="utf-8",
-        extra="ignore",  # Ignore extra env variables not listed here
+        extra="ignore",
     )
 
 
