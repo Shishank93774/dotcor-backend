@@ -1,7 +1,7 @@
 from datetime import datetime
 
+from app.core.exceptions import InvalidInputError, ResourceNotFoundError, ServiceError
 from app.db.models.slot import Slot
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -17,8 +17,11 @@ class SlotService:
             query = query.where(Slot.doctor_id == doctor_id)
         return self._db.scalars(query).all()
 
-    def get_slot(self, slot_id: int) -> Slot | None:
-        return self._db.scalars(select(Slot).where(Slot.id == slot_id)).first()
+    def get_slot(self, slot_id: int) -> Slot:
+        slot = self._db.scalars(select(Slot).where(Slot.id == slot_id)).first()
+        if not slot:
+            raise ResourceNotFoundError("Slot not found")
+        return slot
 
     def create_slot(self, doctor_id: int, start_time: datetime, end_time: datetime) -> Slot:
         try:
@@ -29,19 +32,19 @@ class SlotService:
             return slot
         except IntegrityError:
             self._db.rollback()
-            raise HTTPException(status_code=422, detail="Invalid slot range, overlapping slot, or doctor not found")
+            raise InvalidInputError("Invalid slot range, overlapping slot, or doctor not found")
         except SQLAlchemyError:
             self._db.rollback()
-            raise HTTPException(status_code=500, detail="An unexpected database error occurred while creating the slot")
+            raise ServiceError("An unexpected database error occurred while creating the slot")
 
-    def delete_slot(self, slot_id: int) -> Slot | None:
+    def delete_slot(self, slot_id: int) -> None:
         try:
             slot = self.get_slot(slot_id)
             if not slot:
-                return None
+                raise ResourceNotFoundError("Slot not found")
             self._db.delete(slot)
             self._db.commit()
-            return slot
+            return None
         except SQLAlchemyError:
             self._db.rollback()
-            raise HTTPException(status_code=500, detail="An unexpected database error occurred while deleting the slot")
+            raise ServiceError("An unexpected database error occurred while deleting the slot")
