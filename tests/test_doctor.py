@@ -35,3 +35,28 @@ def test_get_doctors_list(client, create_doctor):
     assert len(data) >= 2
     # public view should not expose email/contact
     assert "email" not in data[0]  # DoctorReadPublic excludes them
+
+def test_create_doctor_duplicate_email(client, create_doctor):
+    create_doctor(email="dup@example.com")
+    payload = {
+        "username": "new_doc",
+        "email": "dup@example.com",
+        "password": "password",
+        "contact_number": "+918888888888",
+        "specialization": "Surgery",
+    }
+    response = client.post("/users/doctors/", json=payload)
+    assert response.status_code == status.HTTP_409_CONFLICT
+
+def test_create_doctor_duplicate_contact(client, create_doctor):
+    create_doctor(contact_number="+918888888888")
+    payload = {
+        "username": "new_doc",
+        "email": "unique@example.com",
+        "password": "password",
+        "contact_number": "+918888888888",
+        "specialization": "Surgery",
+    }
+    response = client.post("/users/doctors/", json=payload)
+    assert response.status_code == status.HTTP_409_CONFLICT
+
