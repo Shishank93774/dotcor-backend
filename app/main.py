@@ -6,12 +6,10 @@ from app.api.v1.booking import router as booking_router
 from app.api.v1.doctor import router as doctor_router
 from app.api.v1.patient import router as patient_router
 from app.api.v1.slot import router as slot_router
+from app.core.exceptions import setup_exception_handlers
 from app.core.logging import get_logger
 from app.db.connection import Base, engine, get_db
-from fastapi import Depends, FastAPI
-from fastapi.responses import JSONResponse
-from app.core.exceptions import setup_exception_handlers
-
+from fastapi import Depends, FastAPI, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -40,26 +38,15 @@ app = FastAPI(lifespan=lifespan)
 setup_exception_handlers(app)
 
 
-
-@app.get("/")
+@app.get("/", status_code=status.HTTP_200_OK)
 async def home():
-    return JSONResponse(content={"message": "Hello, World!"}, status_code=200)
+    return {"message": "Hello, World!"}
 
 
-@app.get("/db-test")
+@app.get("/db-test", status_code=status.HTTP_200_OK)
 async def db_test(db: Session = Depends(get_db)):
-    # Test database connection by executing a simple query
-    try:
-        result = db.execute(text("SELECT 1")).scalar()
-        return JSONResponse(
-            content={"message": "Database connection successful", "result": result},
-            status_code=200,
-        )
-    except Exception as e:
-        return JSONResponse(
-            content={"message": "Database connection failed", "error": str(e)},
-            status_code=500,
-        )
+    result = db.execute(text("SELECT 1")).scalar()
+    return {"message": "Database connection successful", "result": result}
 
 
 app.include_router(patient_router)
