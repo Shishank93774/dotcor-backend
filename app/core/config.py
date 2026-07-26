@@ -23,16 +23,32 @@ class Config(BaseSettings):
 
     @model_validator(mode="after")
     def validate_env(self) -> Self:
-        self.DATABASE_USER = self.POSTGRES_USER or self.DATABASE_USER
-        self.DATABASE_PASSWORD = self.POSTGRES_PASSWORD or self.DATABASE_PASSWORD
-        self.DATABASE_NAME = self.POSTGRES_DB or self.DATABASE_NAME
+        postgres_fields = {
+            "POSTGRES_USER": self.POSTGRES_USER,
+            "POSTGRES_PASSWORD": self.POSTGRES_PASSWORD,
+            "POSTGRES_DB": self.POSTGRES_DB,
+        }
+        database_fields = {
+            "DATABASE_USER": self.DATABASE_USER,
+            "DATABASE_PASSWORD": self.DATABASE_PASSWORD,
+            "DATABASE_NAME": self.DATABASE_NAME,
+        }
 
-        if self.DATABASE_USER is None:
-            raise ValueError("POSTGRES_USER or DATABASE_USER is required")
-        if self.DATABASE_PASSWORD is None:
-            raise ValueError("POSTGRES_PASSWORD or DATABASE_PASSWORD is required")
-        if self.DATABASE_NAME is None:
-            raise ValueError("POSTGRES_DB or DATABASE_NAME is required")
+        postgres_set = {k: v for k, v in postgres_fields.items() if v is not None}
+        database_set = {k: v for k, v in database_fields.items() if v is not None}
+
+        postgres_complete = len(postgres_set) == 3
+        database_complete = len(database_set) == 3
+
+        if postgres_complete:
+            self.DATABASE_USER = self.POSTGRES_USER
+            self.DATABASE_PASSWORD = self.POSTGRES_PASSWORD
+            self.DATABASE_NAME = self.POSTGRES_DB
+        elif database_complete:
+            pass
+        else:
+            raise ValueError("Parital or no database configuration found! Please check your .env file.\n\n")
+
         return self
 
     @property
