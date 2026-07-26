@@ -96,8 +96,6 @@ def create_doctor(client, unique_user_data):
             "specialization": specialization,
         }
 
-        print(final_user_data)
-
         response = client.post(
             "users/doctors/",
             json=final_user_data,
@@ -127,8 +125,6 @@ def create_patient(client, unique_user_data):
             "password": password,
             "contact_number": contact_number or generated["contact_number"],
         }
-
-        print(final_user_data)
 
         response = client.post(
             "users/patients/",
