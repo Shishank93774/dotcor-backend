@@ -53,8 +53,10 @@ class Config(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
+        """Construct the database URL from individual components."""
         return f"postgresql+psycopg2://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}@{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
 
+    # Model configuration behavior
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),
         env_file_encoding="utf-8",
