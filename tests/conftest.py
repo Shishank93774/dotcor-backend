@@ -6,6 +6,7 @@ import pytest
 from app.core.config import config as test_config
 from app.db.connection import Base, get_db
 from app.main import app
+from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -60,7 +61,7 @@ def unique_user_data():
     phone_counter = count()
 
     def _generate(role: str):
-        unique = uuid4().hex
+        unique = uuid4().hex[:8]
         n = next(phone_counter)
 
         # 7899 + six digits = 10-digit Indian mobile number.
@@ -76,9 +77,7 @@ def unique_user_data():
 
 
 @pytest.fixture
-def create_doctor(db_session, unique_user_data):
-    from app.services.doctor import DoctorService
-    from pydantic import SecretStr
+def create_doctor(client, unique_user_data):
 
     def _create_doctor(
         username=None,
@@ -89,23 +88,28 @@ def create_doctor(db_session, unique_user_data):
     ):
         generated = unique_user_data("doctor")
 
-        service = DoctorService(db_session)
+        final_user_data = {
+            "username": username or generated["username"],
+            "email": email or generated["email"],
+            "password": password,
+            "contact_number": contact_number or generated["contact_number"],
+            "specialization": specialization,
+        }
 
-        return service.create_doctor(
-            username=username or generated["username"],
-            email=email or generated["email"],
-            password=SecretStr(password),
-            contact_number=contact_number or generated["contact_number"],
-            specialization=specialization,
+        response = client.post(
+            "users/doctors/",
+            json=final_user_data,
         )
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+        return response.json()
 
     return _create_doctor
 
 
 @pytest.fixture
-def create_patient(db_session, unique_user_data):
-    from app.services.patient import PatientService
-    from pydantic import SecretStr
+def create_patient(client, unique_user_data):
 
     def _create_patient(
         username=None,
@@ -115,24 +119,29 @@ def create_patient(db_session, unique_user_data):
     ):
         generated = unique_user_data("patient")
 
-        service = PatientService(db_session)
+        final_user_data = {
+            "username": username or generated["username"],
+            "email": email or generated["email"],
+            "password": password,
+            "contact_number": contact_number or generated["contact_number"],
+        }
 
-        return service.create_patient(
-            username=username or generated["username"],
-            email=email or generated["email"],
-            password=SecretStr(password),
-            contact_number=contact_number or generated["contact_number"],
+        response = client.post(
+            "users/patients/",
+            json=final_user_data,
         )
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+        return response.json()
 
     return _create_patient
 
 
 @pytest.fixture
-def create_slot(db_session, create_doctor):
+def create_slot(client, create_doctor):
     from datetime import UTC, datetime, timedelta
     from itertools import count
-
-    from app.services.slot import SlotService
 
     slot_counter = count()
 
@@ -141,11 +150,9 @@ def create_slot(db_session, create_doctor):
         start_time=None,
         end_time=None,
     ):
-        service = SlotService(db_session)
-
         if doctor_id is None:
             doctor = create_doctor()
-            doctor_id = doctor.id
+            doctor_id = doctor["id"]
 
         if start_time is None:
             offset = next(slot_counter)
@@ -154,10 +161,17 @@ def create_slot(db_session, create_doctor):
         if end_time is None:
             end_time = start_time + timedelta(hours=1)
 
-        return service.create_slot(
-            doctor_id=doctor_id,
-            start_time=start_time,
-            end_time=end_time,
+        response = client.post(
+            "/slots/",
+            json={
+                "doctor_id": doctor_id,
+                "start_time": str(start_time),
+                "end_time": str(end_time),
+            },
         )
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+        return response.json()
 
     return _create_slot

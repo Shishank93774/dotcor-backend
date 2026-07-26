@@ -10,7 +10,7 @@ def test_create_doctor(client):
         "specialization": "Neurology",
     }
     response = client.post("/users/doctors/", json=payload)
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["username"] == "dr_strange"
     assert data["specialization"] == "Neurology"
@@ -19,10 +19,10 @@ def test_create_doctor(client):
 
 def test_get_doctor(client, create_doctor):
     doctor = create_doctor(username="dr_who")
-    response = client.get(f"/users/doctors/{doctor.id}")
+    response = client.get(f"/users/doctors/{doctor['id']}")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["id"] == doctor.id
+    assert data["id"] == doctor["id"]
     assert data["username"] == "dr_who"
 
 

@@ -4,7 +4,7 @@ from fastapi import status
 def test_create_patient(client):
     payload = {"username": "alice", "email": "alice@example.com", "password": "pass123", "contact_number": "+91 8966352478"}
     response = client.post("/users/patients/", json=payload)
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["username"] == "alice"
     assert data["email"] == "alice@example.com"
@@ -14,10 +14,10 @@ def test_create_patient(client):
 
 def test_get_patient(client, create_patient):
     patient = create_patient(username="bob", email="bob@example.com")
-    response = client.get(f"/users/patients/{patient.id}")
+    response = client.get(f"/users/patients/{patient['id']}")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["id"] == patient.id
+    assert data["id"] == patient["id"]
     assert data["username"] == "bob"
 
 
