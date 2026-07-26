@@ -10,7 +10,7 @@ def test_create_doctor(client):
         "specialization": "Neurology",
     }
     response = client.post("/users/doctors/", json=payload)
-    assert response.text and response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["username"] == "dr_strange"
     assert data["specialization"] == "Neurology"
@@ -20,7 +20,7 @@ def test_create_doctor(client):
 def test_get_doctor(client, create_doctor):
     doctor = create_doctor(username="dr_who")
     response = client.get(f"/users/doctors/{doctor['id']}")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["id"] == doctor["id"]
     assert data["username"] == "dr_who"
@@ -30,7 +30,7 @@ def test_get_doctors_list(client, create_doctor):
     create_doctor(username="doc1")
     create_doctor(username="doc2")
     response = client.get("/users/doctors/")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert len(data) >= 2
     # public view should not expose email/contact

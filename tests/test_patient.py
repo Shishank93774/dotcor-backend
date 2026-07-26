@@ -4,7 +4,7 @@ from fastapi import status
 def test_create_patient(client):
     payload = {"username": "alice", "email": "alice@example.com", "password": "pass123", "contact_number": "+91 8966352478"}
     response = client.post("/users/patients/", json=payload)
-    assert response.text and response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["username"] == "alice"
     assert data["email"] == "alice@example.com"
@@ -15,7 +15,7 @@ def test_create_patient(client):
 def test_get_patient(client, create_patient):
     patient = create_patient(username="bob", email="bob@example.com")
     response = client.get(f"/users/patients/{patient['id']}")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["id"] == patient["id"]
     assert data["username"] == "bob"
@@ -35,7 +35,7 @@ def test_get_patients_list(client, create_patient):
 
 def test_get_patient_not_found(client):
     response = client.get("/users/patients/9999")
-    assert response.text and response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "Patient not found"
 
 
@@ -43,4 +43,4 @@ def test_create_patient_duplicate_username(client, create_patient):
     create_patient(username="duplicate", email="dup1@example.com")
     payload = {"username": "duplicate", "email": "dup2@example.com", "password": "pass", "contact_number": "+918966352782"}
     response = client.post("/users/patients/", json=payload)
-    assert response.text and response.status_code == status.HTTP_409_CONFLICT
+    assert response.status_code == status.HTTP_409_CONFLICT

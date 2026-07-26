@@ -101,7 +101,7 @@ def create_doctor(client, unique_user_data):
             json=final_user_data,
         )
 
-        assert response.text and response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_201_CREATED
 
         return response.json()
 
@@ -131,7 +131,7 @@ def create_patient(client, unique_user_data):
             json=final_user_data,
         )
 
-        assert response.text and response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_201_CREATED
 
         return response.json()
 
@@ -170,7 +170,7 @@ def create_slot(client, create_doctor):
             },
         )
 
-        assert response.text and response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_201_CREATED
 
         return response.json()
 

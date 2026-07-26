@@ -8,7 +8,7 @@ def test_create_booking(client, create_patient, create_slot):
     slot = create_slot()
     payload = {"patient_id": patient["id"], "slot_id": slot["id"]}
     response = client.post("/bookings/", json=payload)
-    assert response.text and response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["patient_id"] == patient["id"]
     assert data["slot_id"] == slot["id"]
@@ -24,7 +24,7 @@ def test_create_booking_slot_already_booked(client, create_patient, create_slot)
     client.post("/bookings/", json={"patient_id": patient1["id"], "slot_id": slot["id"]})
     # Second booking same slot
     response = client.post("/bookings/", json={"patient_id": patient2["id"], "slot_id": slot["id"]})
-    assert response.text and response.status_code == status.HTTP_409_CONFLICT
+    assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] == "Slot already booked"
 
 
@@ -35,7 +35,7 @@ def test_get_booking(client, create_patient, create_slot):
     resp = client.post("/bookings/", json={"patient_id": patient["id"], "slot_id": slot["id"]})
     booking_id = resp.json()["id"]
     response = client.get(f"/bookings/{booking_id}")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["id"] == booking_id
 
@@ -47,7 +47,7 @@ def test_list_bookings(client, create_patient, create_slot):
     client.post("/bookings/", json={"patient_id": patient["id"], "slot_id": slot1["id"]})
     client.post("/bookings/", json={"patient_id": patient["id"], "slot_id": slot2["id"]})
     response = client.get("/bookings/")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert len(data) >= 2
     # You can check if both appear (may contain others, but at least these)
@@ -63,7 +63,7 @@ def test_cancel_booking(client, create_patient, create_slot):
     booking_id = resp.json()["id"]
     # Cancel using PATCH /bookings/cancel?booking_id=...
     response = client.patch(f"/bookings/cancel?booking_id={booking_id}")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["status"] == "cancelled"
     # Verify get booking returns cancelled
@@ -73,4 +73,4 @@ def test_cancel_booking(client, create_patient, create_slot):
 
 def test_cancel_booking_not_found(client):
     response = client.patch("/bookings/cancel?booking_id=9999")
-    assert response.text and response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_404_NOT_FOUND

@@ -9,7 +9,7 @@ def test_create_slot(client, create_doctor):
     end = (datetime.now() + timedelta(days=2, hours=1)).isoformat()
     payload = {"doctor_id": doctor["id"], "start_time": start, "end_time": end}
     response = client.post("/slots/", json=payload)
-    assert response.text and response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["doctor_id"] == doctor["id"]
     assert "id" in data
@@ -24,14 +24,14 @@ def test_create_slot_overlap(client, create_doctor, create_slot):
     # Try to create overlapping slot (same doctor, same time)
     payload = {"doctor_id": doctor["id"], "start_time": start.isoformat(), "end_time": end.isoformat()}
     response = client.post("/slots/", json=payload)
-    assert response.text and response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert "overlapping" in response.text.lower() or "slot" in response.text.lower()
 
 
 def test_get_slots(client, create_slot):
     slot = create_slot()
     response = client.get(f"/slots/{slot['id']}")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["id"] == slot["id"]
 
@@ -39,7 +39,7 @@ def test_get_slots(client, create_slot):
 def test_list_slots(client, create_slot):
     create_slot()  # creates one with default doctor
     response = client.get("/slots/")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert len(data) >= 1
 
@@ -50,7 +50,7 @@ def test_list_slots_by_doctor(client, create_doctor, create_slot):
     slot1 = create_slot(doctor_id=doctor1["id"])
     slot2 = create_slot(doctor_id=doctor2["id"])  # noqa: F841
     response = client.get(f"/slots/?doctor_id={doctor1['id']}")
-    assert response.text and response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert len(data) == 1
     assert data[0]["id"] == slot1["id"]
