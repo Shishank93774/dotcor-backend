@@ -47,7 +47,7 @@ class Config(BaseSettings):
         elif database_complete:
             pass
         else:
-            raise ValueError("Parital or no database configuration found! Please check your .env file.\n\n")
+            raise ValueError("Partial or no database configuration found! Please check your .env file.\n\n")
 
         return self
 
