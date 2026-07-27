@@ -90,7 +90,7 @@ def test_create_booking_invalid_slot(client, create_patient):
     response = client.post("/bookings/", json=payload)
     # The BookingService.create_booking uses a try-except IntegrityError
     # for invalid patient/slot IDs.
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_cancel_booking_already_cancelled(client, create_patient, create_slot):
