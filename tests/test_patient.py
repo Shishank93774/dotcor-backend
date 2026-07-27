@@ -45,15 +45,16 @@ def test_create_patient_duplicate_username(client, create_patient):
     response = client.post("/users/patients/", json=payload)
     assert response.status_code == status.HTTP_409_CONFLICT
 
+
 def test_create_patient_duplicate_email(client, create_patient):
     create_patient(email="dup@example.com")
     payload = {"username": "new_pat", "email": "dup@example.com", "password": "pass", "contact_number": "+918888888888"}
     response = client.post("/users/patients/", json=payload)
     assert response.status_code == status.HTTP_409_CONFLICT
 
+
 def test_create_patient_duplicate_contact(client, create_patient):
     create_patient(contact_number="+918888888888")
     payload = {"username": "new_pat", "email": "unique@example.com", "password": "pass", "contact_number": "+918888888888"}
     response = client.post("/users/patients/", json=payload)
     assert response.status_code == status.HTTP_409_CONFLICT
-
