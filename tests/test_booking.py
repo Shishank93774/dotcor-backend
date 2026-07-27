@@ -106,6 +106,7 @@ def test_cancel_booking_already_cancelled(client, create_patient, create_slot):
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["status"] == "cancelled"
 
+
 def test_booking_lifecycle_rebook(client, create_patient, create_slot):
     # 1. Setup patients and slot
     pat1 = create_patient(username="pat1")
@@ -134,4 +135,3 @@ def test_booking_lifecycle_rebook(client, create_patient, create_slot):
     assert data2["patient_id"] == pat2["id"]
     assert data2["slot_id"] == slot["id"]
     assert data2["status"] == "booked"
-
