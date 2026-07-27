@@ -25,6 +25,9 @@ class BookingService:
             previous_booking = self._db.scalars(select(Booking).where(Booking.slot_id == slot_id, Booking.status == "booked")).first()
             if previous_booking:
                 raise ResourceConflictError("Slot already booked")
+            import time
+
+            time.sleep(0.5)
             self._db.add(booking)
             self._db.commit()
             self._db.refresh(booking)
