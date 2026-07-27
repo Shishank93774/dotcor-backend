@@ -1,8 +1,8 @@
-from app.core.exceptions import ResourceConflictError, ResourceNotFoundError, ServiceError
+from app.core.exceptions import ResourceConflictError, ResourceNotFoundError
 from app.core.utils import get_password_hash
 from app.db.models.doctor import Doctor
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 
@@ -36,6 +36,3 @@ class DoctorService:
         except IntegrityError:
             self._db.rollback()
             raise ResourceConflictError("Username, email, or contact number already exists")
-        except SQLAlchemyError:
-            self._db.rollback()
-            raise ServiceError("An unexpected database error occurred while creating the doctor")

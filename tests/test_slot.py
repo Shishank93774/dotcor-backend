@@ -70,6 +70,7 @@ def test_delete_slot_not_found(client):
     response = client.delete("/slots/9999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
+
 def test_create_slot_invalid_doctor(client):
     start = (datetime.now() + timedelta(days=2)).isoformat()
     end = (datetime.now() + timedelta(days=2, hours=1)).isoformat()
@@ -78,14 +79,16 @@ def test_create_slot_invalid_doctor(client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "Doctor not found"
 
+
 def test_create_slot_invalid_range(client, create_doctor):
     doctor = create_doctor()
     start = datetime.now() + timedelta(days=2)
-    end = start - timedelta(hours=1) # end before start
+    end = start - timedelta(hours=1)  # end before start
     payload = {"doctor_id": doctor["id"], "start_time": start.isoformat(), "end_time": end.isoformat()}
     response = client.post("/slots/", json=payload)
     # This should be caught by a DB check or business logic
     assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_422_UNPROCESSABLE_CONTENT]
+
 
 def test_create_slot_overlap_partial(client, create_doctor, create_slot):
     doctor = create_doctor()
@@ -100,6 +103,7 @@ def test_create_slot_overlap_partial(client, create_doctor, create_slot):
     response = client.post("/slots/", json=payload)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
+
 def test_create_slot_overlap_encompassing(client, create_doctor, create_slot):
     doctor = create_doctor()
     start1 = datetime.now() + timedelta(days=3)
@@ -112,4 +116,3 @@ def test_create_slot_overlap_encompassing(client, create_doctor, create_slot):
     payload = {"doctor_id": doctor["id"], "start_time": start2.isoformat(), "end_time": end2.isoformat()}
     response = client.post("/slots/", json=payload)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-
