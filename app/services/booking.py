@@ -1,5 +1,6 @@
 from app.core.exceptions import InvalidInputError, ResourceConflictError, ResourceNotFoundError
 from app.db.models.booking import Booking
+from app.db.models.slot import Slot
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -20,14 +21,23 @@ class BookingService:
 
     def create_booking(self, patient_id: int, slot_id: int) -> Booking:
         try:
-            booking = Booking(patient_id=patient_id, slot_id=slot_id, status="booked")
+            from app.services.patient import PatientService
+
+            # Check if patient exists
+            patient_service = PatientService(db=self._db)
+            patient_service.get_patient(patient_id)
+
+            # Hold slot to try booking
+            slot = self._db.scalars(select(Slot).where(Slot.id == slot_id).with_for_update()).first()
+            if not slot:
+                raise ResourceNotFoundError("Slot not found")
+
             # Check if booking already exists
             previous_booking = self._db.scalars(select(Booking).where(Booking.slot_id == slot_id, Booking.status == "booked")).first()
             if previous_booking:
                 raise ResourceConflictError("Slot already booked")
-            import time
 
-            time.sleep(0.5)
+            booking = Booking(patient_id=patient_id, slot_id=slot_id, status="booked")
             self._db.add(booking)
             self._db.commit()
             self._db.refresh(booking)
@@ -38,8 +48,6 @@ class BookingService:
 
     def cancel_booking(self, booking_id: int) -> Booking:
         booking = self.get_booking(booking_id)
-        if not booking:
-            raise ResourceNotFoundError("Booking not found")
         booking.status = "cancelled"
         self._db.commit()
         self._db.refresh(booking)

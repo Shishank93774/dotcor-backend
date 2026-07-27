@@ -1,15 +1,10 @@
-from app.db.connection import get_db
+from app.core.services import get_doctor_service
 from app.schemas.doctor import DoctorCreate, DoctorReadPrivate, DoctorReadPublic
 from app.schemas.slot import SlotRead
 from app.services.doctor import DoctorService
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, status
 
 router = APIRouter(prefix="/users/doctors", tags=["doctors"])
-
-
-def get_doctor_service(db: Session = Depends(get_db)) -> DoctorService:
-    return DoctorService(db=db)
 
 
 @router.post("/", response_model=DoctorReadPrivate, status_code=status.HTTP_201_CREATED)
