@@ -37,7 +37,7 @@ class Booking(Base):
 
     __table_args__ = (
         Index(
-            "ix_one_active_booking_per_slot",
+            "ix_one_active_booking_per_slot",  # Acts as safety net, only allowing unique booking per slot
             "slot_id",
             unique=True,
             postgresql_where=status != Status.CANCELLED,
