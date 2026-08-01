@@ -130,3 +130,58 @@ async def test_concurrent_booking_persistence_check():
         stmt = select(Booking).where(Booking.slot_id == slot_id, Booking.status == "booked")
         result = session.scalars(stmt).all()
         assert len(result) == 1, f"Database corruption: {len(result)} active bookings found for one slot"
+
+
+@pytest.mark.asyncio
+async def test_concurrent_booking_with_different_slots():
+    import datetime
+    from datetime import UTC, timedelta
+
+    from app.db.models.booking import Booking
+    from sqlalchemy import select
+
+    NUM_CONCURRENT_REQ = 50
+
+    with SessionLocal() as session:
+        doctor = Doctor(
+            username="diffslots_doc",
+            email="diffslots_doc@example.com",
+            hashed_password=get_password_hash("secret"),
+            contact_number="+914444444444",
+            specialization="General",
+        )
+        session.add(doctor)
+        session.commit()
+        session.refresh(doctor)
+
+        slots = []
+        for i in range(NUM_CONCURRENT_REQ):
+            start = datetime.datetime.now(UTC) + timedelta(days=1) + timedelta(hours=i * 2)
+            end = start + timedelta(hours=1)
+            slot = Slot(doctor_id=doctor.id, start_time=start, end_time=end)
+            session.add(slot)
+            session.commit()
+            slots.append(slot.id)
+
+        patients = []
+        for i in range(NUM_CONCURRENT_REQ):
+            p = Patient(
+                username=f"diffslots_pat_{i}",
+                email=f"diffslots_pat_{i}@example.com",
+                hashed_password=get_password_hash("secret"),
+                contact_number=f"+915555{i:06d}",
+            )
+            session.add(p)
+            session.commit()
+            patients.append(p.id)
+
+    app.dependency_overrides.clear()
+
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        tasks = [client.post("/bookings/", json={"patient_id": pid, "slot_id": sid}) for pid, sid in zip(patients, slots)]
+        await asyncio.gather(*tasks)
+
+    with SessionLocal() as session:
+        stmt = select(Booking).where(Booking.status == "booked", Booking.patient_id.in_(patients))
+        result = session.scalars(stmt).all()
+        assert len(result) == NUM_CONCURRENT_REQ, f"Database corruption: {len(result)} active bookings found for {NUM_CONCURRENT_REQ} slots."

@@ -4,6 +4,7 @@ from app.db.models.slot import Slot
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 
 
 class BookingService:
@@ -27,8 +28,8 @@ class BookingService:
             patient_service = PatientService(db=self._db)
             patient_service.get_patient(patient_id)
 
-            # Hold slot to try booking
-            slot = self._db.scalars(select(Slot).where(Slot.id == slot_id).with_for_update()).first()
+            # Check if slot exists
+            slot = self._db.scalars(select(Slot).where(Slot.id == slot_id)).first()
             if not slot:
                 raise ResourceNotFoundError("Slot not found")
 
@@ -39,9 +40,18 @@ class BookingService:
 
             booking = Booking(patient_id=patient_id, slot_id=slot_id, status="booked")
             self._db.add(booking)
+            from datetime import UTC, datetime
+
+            slot.updated_at = datetime.now(UTC)  # Touch slot to update version
+            self._db.flush()  # Try to insert booking
+
             self._db.commit()
+
             self._db.refresh(booking)
             return booking
+        except StaleDataError:
+            self._db.rollback()
+            raise ResourceConflictError("Slot already booked")
         except IntegrityError:
             self._db.rollback()
             raise InvalidInputError("Invalid patient/slot ID")
