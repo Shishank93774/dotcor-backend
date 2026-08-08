@@ -16,4 +16,8 @@ wheels/
 .env
 
 # Benchmarking files
-*.json
+benchmarking/json_files/
+benchmarking/results/
+
+# Logs
+*.log

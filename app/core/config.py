@@ -10,6 +10,7 @@ class Config(BaseSettings):
 
     APP_NAME: str = "Dotcor"
     DEBUG: bool = False
+    ENVIRONMENT_NAME: str
 
     POSTGRES_USER: str | None = None
     POSTGRES_PASSWORD: str | None = None
@@ -21,8 +22,13 @@ class Config(BaseSettings):
     DATABASE_HOST: str
     DATABASE_PORT: int
 
+    CONFLICT_HANDLE_MODE: str = "optimistic"
+
     @model_validator(mode="after")
     def validate_env(self) -> Self:
+        if self.CONFLICT_HANDLE_MODE not in ["pessimistic", "optimistic"]:
+            raise ValueError("Invalid benchmark mode! Please check your .env file.\n\n")
+
         postgres_fields = {
             "POSTGRES_USER": self.POSTGRES_USER,
             "POSTGRES_PASSWORD": self.POSTGRES_PASSWORD,
