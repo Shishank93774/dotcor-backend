@@ -10,4 +10,14 @@ wheels/
 .venv
 
 # Tests
-tests/
+# tests/
+
+# Environment variables
+.env
+
+# Benchmarking files
+benchmarking/json_files/
+benchmarking/results/
+
+# Logs
+*.log
