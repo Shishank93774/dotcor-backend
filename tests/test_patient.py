@@ -73,6 +73,26 @@ def test_delete_patient(client, create_patient):
     assert get_response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_delete_patient_not_found(client):
-    response = client.delete("/users/patients/9999")
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+def test_delete_patient_cascades(client, create_doctor, create_slot, create_patient):
+    # 1. Setup: Patient -> Booking (with existing slot)
+    patient = create_patient(username="pat_cascade")
+    patient_id = patient["id"]
+    doctor = create_doctor()
+    slot = create_slot(doctor_id=doctor["id"])
+    slot_id = slot["id"]
+
+    # Create booking
+    booking_resp = client.post("/bookings/", json={"patient_id": patient_id, "slot_id": slot_id})
+    booking_id = booking_resp.json()["id"]
+
+    # 2. Delete Patient
+    response = client.delete(f"/users/patients/{patient_id}")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # 3. Verify Cascade: Booking should be gone
+    booking_resp = client.get(f"/bookings/{booking_id}")
+    assert booking_resp.status_code == status.HTTP_404_NOT_FOUND
+
+    # 4. Verify Slot still exists (Slot is owned by Doctor, not Patient)
+    slot_resp = client.get(f"/slots/{slot_id}")
+    assert slot_resp.status_code == status.HTTP_200_OK
