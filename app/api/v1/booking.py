@@ -24,3 +24,8 @@ def get_bookings(booking_service: BookingService = Depends(get_booking_service))
 @router.patch("/cancel", response_model=BookingRead, status_code=status.HTTP_200_OK)
 def cancel_booking(booking_id: int, booking_service: BookingService = Depends(get_booking_service)):
     return booking_service.cancel_booking(booking_id)
+
+
+@router.delete("/{booking_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
+def delete_booking(booking_id: int, booking_service: BookingService = Depends(get_booking_service)):
+    return booking_service.delete_booking(booking_id)

@@ -135,3 +135,23 @@ def test_booking_lifecycle_rebook(client, create_patient, create_slot):
     assert data2["patient_id"] == pat2["id"]
     assert data2["slot_id"] == slot["id"]
     assert data2["status"] == "booked"
+
+
+def test_delete_booking(client, create_patient, create_slot):
+    patient = create_patient()
+    slot = create_slot()
+    resp = client.post("/bookings/", json={"patient_id": patient["id"], "slot_id": slot["id"]})
+    booking_id = resp.json()["id"]
+
+    # Delete booking
+    response = client.delete(f"/bookings/{booking_id}")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify deletion
+    get_resp = client.get(f"/bookings/{booking_id}")
+    assert get_resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_booking_not_found(client):
+    response = client.delete("/bookings/9999")
+    assert response.status_code == status.HTTP_404_NOT_FOUND

@@ -36,3 +36,10 @@ class DoctorService:
         except IntegrityError:
             self._db.rollback()
             raise ResourceConflictError("Username, email, or contact number already exists")
+
+    def delete_doctor(self, doctor_id: int) -> None:
+        doctor = self.get_doctor(doctor_id)
+        self._db.delete(doctor)
+        self._db.commit()
+
+        return None

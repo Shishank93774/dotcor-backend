@@ -26,3 +26,8 @@ def get_patients(patient_service: PatientService = Depends(get_patient_service))
 def get_bookings(patient_id: int, patient_service: PatientService = Depends(get_patient_service)):
     patient = patient_service.get_patient(patient_id)
     return patient.bookings
+
+
+@router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_patient(patient_id: int, patient_service: PatientService = Depends(get_patient_service)):
+    return patient_service.delete_patient(patient_id)
