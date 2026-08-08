@@ -63,3 +63,10 @@ class BookingService:
         self._db.refresh(booking)
 
         return booking
+
+    def delete_booking(self, booking_id: int) -> None:
+        booking = self.get_booking(booking_id)
+        self._db.delete(booking)
+        self._db.commit()
+
+        return None
