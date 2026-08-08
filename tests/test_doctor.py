@@ -61,3 +61,21 @@ def test_create_doctor_duplicate_contact(client, create_doctor):
     }
     response = client.post("/users/doctors/", json=payload)
     assert response.status_code == status.HTTP_409_CONFLICT
+
+
+def test_delete_doctor(client, create_doctor):
+    doctor = create_doctor(username="dr_delete")
+    doctor_id = doctor["id"]
+
+    # Delete doctor
+    response = client.delete(f"/users/doctors/{doctor_id}")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify deletion
+    get_response = client.get(f"/users/doctors/{doctor_id}")
+    assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_doctor_not_found(client):
+    response = client.delete("/users/doctors/9999")
+    assert response.status_code == status.HTTP_404_NOT_FOUND

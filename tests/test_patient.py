@@ -58,3 +58,21 @@ def test_create_patient_duplicate_contact(client, create_patient):
     payload = {"username": "new_pat", "email": "unique@example.com", "password": "pass", "contact_number": "+918888888888"}
     response = client.post("/users/patients/", json=payload)
     assert response.status_code == status.HTTP_409_CONFLICT
+
+
+def test_delete_patient(client, create_patient):
+    patient = create_patient(username="pat_delete")
+    patient_id = patient["id"]
+
+    # Delete patient
+    response = client.delete(f"/users/patients/{patient_id}")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify deletion
+    get_response = client.get(f"/users/patients/{patient_id}")
+    assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_patient_not_found(client):
+    response = client.delete("/users/patients/9999")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
