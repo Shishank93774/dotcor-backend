@@ -26,3 +26,8 @@ def get_doctors(doctor_service: DoctorService = Depends(get_doctor_service)):
 def get_slots(doctor_id: int, doctor_service: DoctorService = Depends(get_doctor_service)):
     doctor = doctor_service.get_doctor(doctor_id)
     return doctor.slots
+
+
+@router.delete("/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_doctor(doctor_id: int, doctor_service: DoctorService = Depends(get_doctor_service)):
+    return doctor_service.delete_doctor(doctor_id)
