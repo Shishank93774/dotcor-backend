@@ -56,7 +56,7 @@ def on_locust_init(environment, **kwargs):
         doctors=doctors,
         slots=slots,
         patients=patients,
-        hot_slots=slots[:10],
+        hot_slots=slots[:5],
     )
 
 
