@@ -5,5 +5,4 @@ __pycache__
 .env
 local_logs
 test_logs
-benchmarking
 tests
