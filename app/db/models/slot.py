@@ -26,6 +26,7 @@ class Slot(Base):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
+    version_id: Mapped[int] = mapped_column(default=1, nullable=False)
 
     doctor: Mapped["Doctor"] = relationship(back_populates="slots")
     booking: Mapped["Booking | None"] = relationship(back_populates="slot", cascade="all, delete-orphan", uselist=False)
@@ -39,3 +40,5 @@ class Slot(Base):
             name="ex_no_overlapping_slots_per_doctor",
         ),
     )
+
+    __mapper_args__ = {"version_id_col": version_id}
