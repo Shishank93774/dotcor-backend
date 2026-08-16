@@ -1,6 +1,5 @@
-from app.core.exceptions import InvalidTokenError, ResourceNotFoundError
+from app.core.exceptions import InvalidInputError, InvalidTokenError, ResourceNotFoundError, UnauthorizedError
 from app.core.services import get_auth_service, get_booking_service, get_message_service
-from app.db.models.message import MessageType
 from app.schemas.booking import BookingCreate, BookingRead
 from app.services.auth import AuthService
 from app.services.booking import BookingService
@@ -60,27 +59,20 @@ async def chat(
     except InvalidTokenError:
         raise WebSocketException(code=status.WS_1007_INVALID_FRAME_PAYLOAD_DATA, reason="Failed to Authenticate")
 
-    try:
-        booking = booking_service.get_booking(booking_id)
-    except ResourceNotFoundError:
-        raise WebSocketException(code=status.WS_1007_INVALID_FRAME_PAYLOAD_DATA, reason="Booking not found")
-
-    if booking.status != "booked":
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Booking not found or is cancelled")
-
     user_id = auth.user_id
 
-    if user_id not in (booking.patient_id, booking.slot.doctor_id):
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Failed to Authenticate")
+    try:
+        booking_service.verify_chat_access(user_id, booking_id)
+    except (ResourceNotFoundError, UnauthorizedError):
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Booking not found or unauthorized")
 
     await ws_manager.connect(websocket=websocket, client_id=user_id, room_id=booking_id)
     try:
         while True:
             data = await websocket.receive_text()
-            if len(data) > 256:
+            try:
+                await message_service.process_message(user_id, booking_id, data)
+            except InvalidInputError:
                 raise WebSocketException(code=status.WS_1007_INVALID_FRAME_PAYLOAD_DATA, reason="Message too long")
-            message_service.save_message(sender_id=user_id, room_id=booking_id, type=MessageType.TEXT, content=data)
-
-            await ws_manager.broadcast(client_id=user_id, room_id=booking_id, message=data)
     except WebSocketDisconnect:
         await ws_manager.disconnect(websocket=websocket)

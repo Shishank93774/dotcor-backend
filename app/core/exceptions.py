@@ -37,6 +37,12 @@ class InvalidTokenError(DomainException):
     pass
 
 
+class UnauthorizedError(DomainException):
+    """Raised when a user is not authorized to access a resource (HTTP 403)."""
+
+    pass
+
+
 class ServiceError(DomainException):
     """Raised when an unexpected internal service error occurs (HTTP 500)."""
 

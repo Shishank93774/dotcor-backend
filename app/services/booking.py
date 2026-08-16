@@ -68,3 +68,11 @@ class BookingService:
         logger.info(f"Deleted booking ID: {booking_id}")
 
         return None
+
+    def verify_chat_access(self, user_id: int, booking_id: int) -> None:
+        from app.core.exceptions import UnauthorizedError
+        booking = self.get_booking(booking_id)
+        if booking.status != "booked":
+            raise UnauthorizedError("Booking not found or is cancelled")
+        if user_id not in (booking.patient_id, booking.slot.doctor_id):
+            raise UnauthorizedError("User is not authorized to join this chat")
