@@ -6,7 +6,6 @@ from app.db.connection import Base
 if TYPE_CHECKING:
     from app.db.models.booking import Booking
     from app.db.models.doctor import Doctor
-
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship

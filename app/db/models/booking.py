@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from app.db.connection import Base
 
 if TYPE_CHECKING:
+    from app.db.models.message import Message
     from app.db.models.patient import Patient
     from app.db.models.slot import Slot
 from sqlalchemy import DateTime, ForeignKey, Index
@@ -34,6 +35,7 @@ class Booking(Base):
 
     slot: Mapped["Slot"] = relationship(back_populates="booking")
     patient: Mapped["Patient"] = relationship(back_populates="bookings")
+    messages: Mapped[list["Message"]] = relationship(back_populates="booking", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index(

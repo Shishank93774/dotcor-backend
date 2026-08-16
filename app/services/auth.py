@@ -21,7 +21,7 @@ class AuthService:
 
         user = self._db.scalars(select(User).where(User.id == user_id)).first()
         if not user:
-            logger.info(f"User {user_id} not found")
+            logger.warning(f"User {user_id} not found")
             raise ResourceNotFoundError("User not found")
 
         auth = self._db.scalars(select(Auth).where(Auth.user_id == user_id)).first()
@@ -43,12 +43,14 @@ class AuthService:
     def verify(self, token: str) -> Auth:
         auth = self._db.scalars(select(Auth).where(Auth.token == token)).first()
         if not auth:
-            logger.info(f"Token {token} not found")
+            logger.warning(f"Token {token} not found")
             raise InvalidTokenError("Invalid token")
 
         expiry_time = auth.updated_at + timedelta(minutes=AUTH_EXPIRY_TIME_MINUTES)
         if expiry_time < datetime.now(UTC):
-            logger.info(f"Token {token} expired")
+            logger.warning(f"Token {token} expired")
             raise InvalidTokenError("Token Expired, please login again")
+
+        logger.info(f"Verified token for user {auth.user_id}")
 
         return auth

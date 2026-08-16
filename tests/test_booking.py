@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
-from fastapi import status
+import pytest
+from fastapi import WebSocketDisconnect, status
 
 
 def test_create_booking(client, create_patient, create_slot):
@@ -155,3 +156,94 @@ def test_delete_booking(client, create_patient, create_slot):
 def test_delete_booking_not_found(client):
     response = client.delete("/bookings/9999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+# --- WebSocket Tests ---
+
+
+def get_token(db_session, user_id):
+    from app.services.auth import AuthService
+
+    auth_service = AuthService(db_session)
+    return auth_service.login(user_id).token
+
+
+def test_chat_auth_failure(client):
+    # Attempt to connect with an invalid token
+    # FastAPI's TestClient raises WebSocketException as a standard exception during connect
+    with pytest.raises(Exception):
+        with client.websocket_connect("/bookings/1/ws?token=invalid_token"):
+            pass
+
+
+def test_chat_booking_not_found(client, db_session, create_patient):
+    patient = create_patient()
+    token = get_token(db_session, patient["id"])
+    with pytest.raises(Exception):
+        with client.websocket_connect(f"/bookings/9999/ws?token={token}"):
+            pass
+
+
+def test_chat_invalid_booking_status(client, db_session, create_patient, create_slot):
+    patient = create_patient()
+    slot = create_slot()
+    resp = client.post("/bookings/", json={"patient_id": patient["id"], "slot_id": slot["id"]})
+    booking_id = resp.json()["id"]
+    client.patch(f"/bookings/cancel?booking_id={booking_id}")
+
+    token = get_token(db_session, patient["id"])
+    with pytest.raises(Exception):
+        with client.websocket_connect(f"/bookings/{booking_id}/ws?token={token}"):
+            pass
+
+
+def test_chat_unauthorized_user(client, db_session, create_patient, create_slot):
+    patient1 = create_patient()
+    patient2 = create_patient()
+    slot = create_slot()
+    resp = client.post("/bookings/", json={"patient_id": patient1["id"], "slot_id": slot["id"]})
+    booking_id = resp.json()["id"]
+
+    token2 = get_token(db_session, patient2["id"])
+    with pytest.raises(Exception):
+        with client.websocket_connect(f"/bookings/{booking_id}/ws?token={token2}"):
+            pass
+
+
+def test_chat_success_and_message_save(client, db_session, create_patient, create_slot, create_doctor):
+    patient = create_patient()
+    doctor = create_doctor()
+    slot = create_slot(doctor_id=doctor["id"])
+    resp = client.post("/bookings/", json={"patient_id": patient["id"], "slot_id": slot["id"]})
+    booking_id = resp.json()["id"]
+
+    token = get_token(db_session, patient["id"])
+    with client.websocket_connect(f"/bookings/{booking_id}/ws?token={token}") as websocket:
+        msg = "Hello Doctor!"
+        websocket.send_text(msg)
+        data = websocket.receive_json()
+        assert data["message"] == msg
+        assert data["sender"] == patient["id"]
+
+    from app.db.models.message import Message
+    from sqlalchemy import select
+
+    stmt = select(Message).where(Message.room_id == booking_id, Message.content == msg)
+    message = db_session.scalars(stmt).first()
+    assert message is not None
+    assert message.sender_id == patient["id"]
+
+
+def test_chat_message_too_long(client, db_session, create_patient, create_slot):
+    patient = create_patient()
+    slot = create_slot()
+    resp = client.post("/bookings/", json={"patient_id": patient["id"], "slot_id": slot["id"]})
+    booking_id = resp.json()["id"]
+
+    token = get_token(db_session, patient["id"])
+    with client.websocket_connect(f"/bookings/{booking_id}/ws?token={token}") as websocket:
+        long_msg = "a" * 257
+        websocket.send_text(long_msg)
+        # The server should raise a WebSocketException and close the connection
+        with pytest.raises(WebSocketDisconnect):
+            websocket.receive_text()

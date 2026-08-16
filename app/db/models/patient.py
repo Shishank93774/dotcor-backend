@@ -1,5 +1,9 @@
-from app.db.models.booking import Booking
+from typing import TYPE_CHECKING
+
 from app.db.models.user import User
+
+if TYPE_CHECKING:
+    from app.db.models.booking import Booking
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

@@ -2,6 +2,7 @@ from app.db.connection import get_db
 from app.services.auth import AuthService
 from app.services.booking import BookingService
 from app.services.doctor import DoctorService
+from app.services.message import MessageService
 from app.services.patient import PatientService
 from app.services.slot import SlotService
 from fastapi import Depends
@@ -26,3 +27,7 @@ def get_booking_service(db: Session = Depends(get_db)) -> BookingService:
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
     return AuthService(db=db)
+
+
+def get_message_service(db: Session = Depends(get_db)) -> MessageService:
+    return MessageService(db=db)

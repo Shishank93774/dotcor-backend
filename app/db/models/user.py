@@ -1,7 +1,10 @@
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from app.db.connection import Base
-from app.db.models.auth import Auth
+
+if TYPE_CHECKING:
+    from app.db.models.auth import Auth
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
