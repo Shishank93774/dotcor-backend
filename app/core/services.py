@@ -1,4 +1,5 @@
 from app.db.connection import get_db
+from app.services.auth import AuthService
 from app.services.booking import BookingService
 from app.services.doctor import DoctorService
 from app.services.patient import PatientService
@@ -21,3 +22,7 @@ def get_doctor_service(db: Session = Depends(get_db)) -> DoctorService:
 
 def get_booking_service(db: Session = Depends(get_db)) -> BookingService:
     return BookingService(db=db)
+
+
+def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
+    return AuthService(db=db)

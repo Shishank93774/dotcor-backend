@@ -1,6 +1,5 @@
 from app.core.exceptions import ResourceConflictError, ResourceNotFoundError
 from app.core.logging import get_logger
-from app.core.utils import get_password_hash
 from app.db.models.doctor import Doctor
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -24,6 +23,8 @@ class DoctorService:
         return doctor
 
     def create_doctor(self, username: str, email: str, password: str, contact_number: str, specialization: str, role: str = "doctor") -> Doctor:
+        from app.core.utils import get_password_hash
+
         try:
             doctor = Doctor(
                 username=username,

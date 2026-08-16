@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
 
 from app.db.connection import Base
+from app.db.models.auth import Auth
 from sqlalchemy import DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class User(Base):
@@ -20,6 +21,8 @@ class User(Base):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
+
+    auth: Mapped["Auth"] = relationship(back_populates="user")
 
     __mapper_args__ = {
         "polymorphic_identity": "users",

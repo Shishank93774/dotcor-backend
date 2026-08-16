@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 import app.db.models
 import app.schemas
+from app.api.v1.auth import router as auth_router
 from app.api.v1.booking import router as booking_router
 from app.api.v1.doctor import router as doctor_router
 from app.api.v1.patient import router as patient_router
@@ -49,6 +50,7 @@ async def db_test(db: Session = Depends(get_db)):
     return {"message": "Database connection successful", "result": result}
 
 
+app.include_router(auth_router)
 app.include_router(patient_router)
 app.include_router(doctor_router)
 app.include_router(booking_router)
