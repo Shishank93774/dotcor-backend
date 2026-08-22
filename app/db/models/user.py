@@ -5,6 +5,7 @@ from app.db.connection import Base
 
 if TYPE_CHECKING:
     from app.db.models.auth import Auth
+    from app.db.models.chat_room import ChatRoom
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,6 +27,8 @@ class User(Base):
     )
 
     auth: Mapped["Auth"] = relationship(back_populates="user")
+    patient_chat_rooms: Mapped[list["ChatRoom"]] = relationship(foreign_keys="[ChatRoom.patient_id]", back_populates="patient")
+    doctor_chat_rooms: Mapped[list["ChatRoom"]] = relationship(foreign_keys="[ChatRoom.doctor_id]", back_populates="doctor")
 
     __mapper_args__ = {
         "polymorphic_identity": "users",

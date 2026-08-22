@@ -54,6 +54,28 @@ def client(db_session):
 
 # ----- Helper fixtures for test data -----
 @pytest.fixture
+def login_token(db_session):
+    def _login(user_id: int) -> str:
+        from app.services.auth import AuthService
+
+        return AuthService(db_session).login(user_id).token
+
+    return _login
+
+
+@pytest.fixture
+def create_booking(client, create_patient, create_slot):
+    def _create_booking(patient_id=None, slot_id=None):
+        if slot_id is None:
+            slot_id = create_slot()["id"]
+        if patient_id is None:
+            patient_id = create_patient()["id"]
+        response = client.post("/bookings/", json={"patient_id": patient_id, "slot_id": slot_id})
+        assert response.status_code == status.HTTP_201_CREATED
+        return response.json()
+
+    return _create_booking
+@pytest.fixture
 def unique_user_data():
     from itertools import count
     from uuid import uuid4

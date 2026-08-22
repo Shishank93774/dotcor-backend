@@ -35,7 +35,6 @@ class Booking(Base):
 
     slot: Mapped["Slot"] = relationship(back_populates="booking")
     patient: Mapped["Patient"] = relationship(back_populates="bookings")
-    messages: Mapped[list["Message"]] = relationship(back_populates="booking", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index(

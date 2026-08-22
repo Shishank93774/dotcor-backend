@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.db.models.slot import Slot
+from app.db.models.chat_room import ChatRoom
 from app.db.models.user import User
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,6 +13,10 @@ class Doctor(User):
 
     id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True, index=True)
     specialization: Mapped[str] = mapped_column(nullable=False)
+
+    @property
+    def chat_rooms(self) -> list["ChatRoom"]:
+        return self.doctor_chat_rooms
 
     slots: Mapped[list["Slot"]] = relationship(back_populates="doctor", cascade="all, delete-orphan")
 

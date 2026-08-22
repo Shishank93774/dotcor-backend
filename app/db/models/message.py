@@ -6,7 +6,7 @@ from app.db.connection import Base
 from app.db.models.user import User
 
 if TYPE_CHECKING:
-    from app.db.models.booking import Booking
+    from app.db.models.chat_room import ChatRoom
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -21,7 +21,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    room_id: Mapped[int] = mapped_column(ForeignKey("bookings.id"), nullable=False, index=True)
+    room_id: Mapped[int] = mapped_column(ForeignKey("chat_rooms.id"), nullable=False, index=True)
     sender_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     type: Mapped[MessageType] = mapped_column(SAEnum(MessageType, values_callable=lambda enum: [e.value for e in enum]))
     content: Mapped[str] = mapped_column(nullable=False)
@@ -32,5 +32,5 @@ class Message(Base):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    booking: Mapped["Booking"] = relationship(back_populates="messages")
+    chat_room: Mapped["ChatRoom"] = relationship(back_populates="messages")
     sender: Mapped["User"] = relationship()

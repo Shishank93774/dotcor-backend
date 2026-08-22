@@ -78,6 +78,13 @@ def setup_exception_handlers(app: FastAPI):
             content={"detail": exc.message},
         )
 
+    @app.exception_handler(UnauthorizedError)
+    async def unauthorized_exception_handler(request: Request, exc: UnauthorizedError):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": exc.message},
+        )
+
     @app.exception_handler(ServiceError)
     async def service_error_exception_handler(request: Request, exc: ServiceError):
         return JSONResponse(
