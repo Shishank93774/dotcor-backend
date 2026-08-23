@@ -1,6 +1,6 @@
 import asyncio
 
-import httpx
+import httpx2
 import pytest
 from app.core.utils import get_password_hash
 from app.db.connection import SessionLocal
@@ -56,7 +56,7 @@ async def test_concurrent_booking_single_winner():
     app.dependency_overrides.clear()
 
     try:
-        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), base_url="http://test") as client:
             # 3. Fire N concurrent booking requests for the same slot
             tasks = [client.post("/bookings/", json={"patient_id": pid, "slot_id": slot_id}) for pid in patient_ids]
 
@@ -119,7 +119,7 @@ async def test_concurrent_booking_persistence_check():
     app.dependency_overrides.clear()
 
     try:
-        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), base_url="http://test") as client:
             tasks = [client.post("/bookings/", json={"patient_id": p, "slot_id": slot_id}) for p in patient_ids]
             await asyncio.gather(*tasks)
     finally:
@@ -177,7 +177,7 @@ async def test_concurrent_booking_with_different_slots():
 
     app.dependency_overrides.clear()
 
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+    async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), base_url="http://test") as client:
         tasks = [client.post("/bookings/", json={"patient_id": pid, "slot_id": sid}) for pid, sid in zip(patients, slots)]
         await asyncio.gather(*tasks)
 

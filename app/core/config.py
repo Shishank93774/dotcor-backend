@@ -10,6 +10,7 @@ class Config(BaseSettings):
 
     APP_NAME: str = "Dotcor"
     DEBUG: bool = False
+    WRITE_LOG_TO_TERMINAL: bool = False
     ENVIRONMENT_NAME: str
 
     POSTGRES_USER: str | None = None
