@@ -1,4 +1,4 @@
-from app.core.exceptions import InvalidInputError, ResourceConflictError, ResourceNotFoundError
+from app.core.exceptions import InvalidInputError, ResourceConflictError, ResourceNotFoundError, UnauthorizedError
 from app.core.logging import get_logger
 from app.db.models.booking import Booking
 from app.db.models.slot import Slot
@@ -21,6 +21,7 @@ class BookingService:
         if not booking:
             logger.warning(f"Booking with ID {booking_id} not found")
             raise ResourceNotFoundError("Booking not found")
+        logger.info(f"Retrieved booking ID: {booking_id}")
         return booking
 
     def create_booking(self, patient_id: int, slot_id: int) -> Booking:
@@ -69,10 +70,15 @@ class BookingService:
 
         return None
 
-    def verify_chat_access(self, user_id: int, booking_id: int) -> None:
-        from app.core.exceptions import UnauthorizedError
+    def verify_chat_access(self, user_id: int, booking_id: int) -> Booking:
+
         booking = self.get_booking(booking_id)
         if booking.status != "booked":
+            logger.info(f"Booking {booking_id} is not active; access denied for user {user_id}")
             raise UnauthorizedError("Booking not found or is cancelled")
         if user_id not in (booking.patient_id, booking.slot.doctor_id):
+            logger.info(f"Chat access not verified for user {user_id} on booking {booking_id}")
             raise UnauthorizedError("User is not authorized to join this chat")
+        logger.info(f"Verified chat access for user {user_id} on booking {booking_id}")
+
+        return booking

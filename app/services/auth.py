@@ -4,7 +4,6 @@ from random import randbytes
 from app.core.exceptions import InvalidTokenError, ResourceNotFoundError
 from app.core.logging import get_logger
 from app.db.models.auth import Auth
-from app.db.models.user import User
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,8 +17,9 @@ class AuthService:
         self._db = db
 
     def login(self, user_id: int) -> Auth:
+        from app.services.user import UserService
 
-        user = self._db.scalars(select(User).where(User.id == user_id)).first()
+        user = UserService(self._db).get_user(user_id)
         if not user:
             logger.warning(f"User {user_id} not found")
             raise ResourceNotFoundError("User not found")
@@ -43,12 +43,12 @@ class AuthService:
     def verify(self, token: str) -> Auth:
         auth = self._db.scalars(select(Auth).where(Auth.token == token)).first()
         if not auth:
-            logger.warning(f"Token {token} not found")
+            logger.warning("Auth rejected: unknown token presented (token material not logged)")
             raise InvalidTokenError("Invalid token")
 
         expiry_time = auth.updated_at + timedelta(minutes=AUTH_EXPIRY_TIME_MINUTES)
         if expiry_time < datetime.now(UTC):
-            logger.warning(f"Token {token} expired")
+            logger.warning(f"Auth rejected: expired token for user {auth.user_id} (token material not logged)")
             raise InvalidTokenError("Token Expired, please login again")
 
         logger.info(f"Verified token for user {auth.user_id}")

@@ -185,3 +185,85 @@ async def test_concurrent_booking_with_different_slots():
         stmt = select(Booking).where(Booking.status == "booked", Booking.patient_id.in_(patients))
         result = session.scalars(stmt).all()
         assert len(result) == NUM_CONCURRENT_REQ, f"Database corruption: {len(result)} active bookings found for {NUM_CONCURRENT_REQ} slots."
+
+
+def test_concurrent_chat_room_creation_single_winner():
+    import threading
+    import uuid
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import func, select
+
+    from app.core.utils import get_password_hash
+    from app.db.connection import SessionLocal
+    from app.db.models.booking import Booking
+    from app.db.models.chat_room import ChatRoom
+    from app.db.models.doctor import Doctor
+    from app.db.models.patient import Patient
+    from app.db.models.slot import Slot
+    from app.services.chat_room import ChatRoomService
+
+    tag = uuid.uuid4().hex[:8]
+    with SessionLocal() as session:
+        doctor = Doctor(
+            username=f"rr_d_{tag}",
+            email=f"rr_d_{tag}@example.com",
+            hashed_password=get_password_hash("secret"),
+            contact_number=f"+9196000{tag[:3]}",
+            specialization="General",
+        )
+        session.add(doctor)
+        session.commit()
+        session.refresh(doctor)
+
+        patient = Patient(
+            username=f"rr_p_{tag}",
+            email=f"rr_p_{tag}@example.com",
+            hashed_password=get_password_hash("secret"),
+            contact_number=f"+9196001{tag[:5]}",
+        )
+        session.add(patient)
+        session.commit()
+        session.refresh(patient)
+
+        start = datetime.now(UTC) + timedelta(days=40)
+        slot = Slot(doctor_id=doctor.id, start_time=start, end_time=start + timedelta(hours=1))
+        session.add(slot)
+        session.commit()
+        session.refresh(slot)
+
+        booking = Booking(patient_id=patient.id, slot_id=slot.id, status="booked")
+        session.add(booking)
+        session.commit()
+        session.refresh(booking)
+
+        ids = {"doctor": doctor.id, "patient": patient.id, "booking": booking.id}
+
+    WORKERS = 8
+    results = []
+    barrier = threading.Barrier(WORKERS)
+
+    def worker():
+        session = SessionLocal()
+        try:
+            barrier.wait(timeout=10)
+            room = ChatRoomService(session).create_chat_room(
+                patient_id=ids["patient"], doctor_id=ids["doctor"], booking_id=ids["booking"]
+            )
+            results.append(room.id)
+        finally:
+            session.close()
+
+    threads = [threading.Thread(target=worker) for _ in range(WORKERS)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    assert not any(t.is_alive() for t in threads), "chat room race deadlocked"
+
+    assert len(results) == WORKERS
+    assert len(set(results)) == 1, f"divergent room ids returned to racing callers: {results}"
+
+    with SessionLocal() as session:
+        count = session.scalar(select(func.count()).select_from(ChatRoom).where(ChatRoom.booking_id == ids["booking"]))
+        assert count == 1, f"expected exactly one chat room row, found {count}"
