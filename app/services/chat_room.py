@@ -84,15 +84,13 @@ class ChatRoomService:
         return None
 
     def load_messages(self, room_id: int, offset: int = 0, limit: int = 25) -> list[Message]:
-        message_service = MessageService(db=self._db)
-        messages = message_service.load_messages(room_id=room_id, offset=offset, limit=limit)
+        messages = MessageService(db=self._db).load_messages(room_id=room_id, offset=offset, limit=limit)
         logger.info(f"Loaded {len(messages)} messages for room ID: {room_id}")
         return messages
 
     async def send_message(self, sender_id: int, room_id: int, content: str) -> None:
-        message_service = MessageService(db=self._db)
         try:
-            message_service.process_message(sender_id=sender_id, room_id=room_id, type=MessageType.TEXT, content=content)
+            MessageService(db=self._db).process_message(sender_id=sender_id, room_id=room_id, type=MessageType.TEXT, content=content)
         except InvalidInputError as e:
             await self._ws_manager.reply_sender(
                 client_id=sender_id,
