@@ -1,12 +1,14 @@
 from app.core.exceptions import InvalidInputError, ResourceConflictError, ResourceNotFoundError, UnauthorizedError
 from app.core.logging import get_logger
-from app.db.models.booking import Booking
+from app.db.models.booking import Booking, Status
 from app.db.models.slot import Slot
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
+
+PG_UNIQUE_VIOLATION = "23505"
 
 
 class BookingService:
@@ -50,12 +52,24 @@ class BookingService:
             return booking
         except IntegrityError as e:
             self._db.rollback()
+            if getattr(e.orig, "pgcode", None) == PG_UNIQUE_VIOLATION:
+                logger.error(
+                    f"Safety-net index fired during booking for patient {patient_id} on slot {slot_id}; treating as conflict.\n Error: {e}"
+                )
+                raise ResourceConflictError("Slot already booked")
             logger.error(f"Integrity error during pessimistic booking for patient {patient_id} on slot {slot_id}.\n Error: {e}")
             raise InvalidInputError("Invalid patient/slot ID")
 
     def cancel_booking(self, booking_id: int) -> Booking:
         booking = self.get_booking(booking_id)
-        booking.status = "cancelled"
+        if booking.status == Status.CANCELLED:
+            logger.info(f"Booking {booking_id} already cancelled; returning unchanged (idempotent)")
+            return booking
+        if booking.status == Status.COMPLETED:
+            logger.warning(f"Refusing to cancel completed booking {booking_id}")
+            raise ResourceConflictError("Completed bookings cannot be cancelled")
+
+        booking.status = Status.CANCELLED
         self._db.commit()
         self._db.refresh(booking)
         logger.info(f"Cancelled booking ID: {booking_id}")
