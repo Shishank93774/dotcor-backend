@@ -74,7 +74,7 @@ class BookingService:
 
         booking = self.get_booking(booking_id)
         if booking.status != "booked":
-            logger.info(f"Chat access not verified for user {user_id} on booking {booking_id}")
+            logger.info(f"Booking {booking_id} is not active; access denied for user {user_id}")
             raise UnauthorizedError("Booking not found or is cancelled")
         if user_id not in (booking.patient_id, booking.slot.doctor_id):
             logger.info(f"Chat access not verified for user {user_id} on booking {booking_id}")
