@@ -4,6 +4,7 @@ import pytest
 from fastapi import WebSocketDisconnect, status
 from sqlalchemy import select
 
+from app.db.models.booking import Booking, Status
 from app.db.models.chat_room import ChatRoom
 from app.db.models.message import Message
 
@@ -106,10 +107,24 @@ def test_cancel_booking_already_cancelled(client, create_patient, create_slot):
 
     # First cancellation
     client.patch(f"/bookings/cancel?booking_id={booking_id}")
-    # Second cancellation
+    # Second cancellation is idempotent
     response = client.patch(f"/bookings/cancel?booking_id={booking_id}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["status"] == "cancelled"
+
+
+def test_cancel_completed_booking_rejected(client, db_session, create_booking):
+    booking = create_booking()
+    db_booking = db_session.scalars(select(Booking).where(Booking.id == booking["id"])).first()
+    db_booking.status = Status.COMPLETED
+    db_session.commit()
+
+    response = client.patch(f"/bookings/cancel?booking_id={booking['id']}")
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert response.json()["detail"] == "Completed bookings cannot be cancelled"
+
+    get_resp = client.get(f"/bookings/{booking['id']}")
+    assert get_resp.json()["status"] == "completed"
 
 
 def test_booking_lifecycle_rebook(client, create_patient, create_slot):
